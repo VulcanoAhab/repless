@@ -1,5 +1,4 @@
-from .python import setEnv
-from ground.basic import Ask, Say, loadConfig, persistConfig
+from ground.basic import Ask, Say, loadConfig, persistConfig, setFabricEnv
 from fabric.api import run, local, env, task, prompt
 
 
@@ -9,4 +8,5 @@ CONFIGFILE="./django-config.json"
 def deploy():
     """
     """
-    setEnv()
+    setFabricEnv(CONFIGFILE)
+    local("echo $VIRTUAL_ENV")

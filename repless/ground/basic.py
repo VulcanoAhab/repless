@@ -12,7 +12,7 @@ from fabric.api import run, local, env, task, prompt
 class Configuration:
     """
     """
-    
+
     servers_ip=[]
     aws_key=""
     aws_secret=""
@@ -29,12 +29,12 @@ class Configuration:
     python_dependencies_file="requirements.txt"
     lambda_ec2_file="/tmp/repless_lambda_ec2"
     lambda_zip_local="/tmp/lambda_ground.zip"
-    
+
     @classmethod
     def set_values(cls, **kwargs):
         """
         """
-        for key, value in kwargs.items():setattr(cls, key, value)    
+        for key, value in kwargs.items():setattr(cls, key, value)
 
 ### ask's methods
 class Ask:
@@ -71,7 +71,7 @@ class Ask:
         msg="The target virtual env name"
         vName=cls._green(msg)
         return vName
-    
+
     @classmethod
     def key_filename(cls):
         """
@@ -86,11 +86,11 @@ class Ask:
     def newConfig(cls):
         msg="Old config detected."\
             "Do you want to set a new one"
-        wants=cls._green(msg, 
+        wants=cls._green(msg,
                         default="n",
                         validate=r"[YynN]")
         return wants
-        
+
 
 ### say methods
 class Say:
@@ -107,13 +107,13 @@ class Say:
         """
         """
         cls._white(msg)
-    
+
     @classmethod
     def action(cls, msg):
         """
         """
         cls._blue(msg)
-    
+
     @classmethod
     def warn(cls, msg):
         """
@@ -144,6 +144,30 @@ def persistConfig(configs, configFile):
     fd=open(configFile, "w")
     json.dump(configs, fd)
     fd.close()
+
+## set fabric env
+def setFabricEnv(CONFIGFILE):
+    """
+    """
+    preConfig=loadConfig(CONFIGFILE)
+    if preConfig:
+        setNewConfig=Ask.newConfig()
+    if not preConfig or setNewConfig.lower() == "y":
+        configs={}
+        configs["hosts"]=Ask.hosts()
+        configs["key_filename"]=Ask.key_filename()
+        configs["user"]=Ask.user_name()
+        persistConfig(configs,CONFIGFILE)
+    else:
+        configs=preConfig
+    for k,v in configs.items():
+        env[k]=v
+    msg="[+] Hosts: {}\n"\
+        "[+] User: {}\n"\
+        "[+] Key file: {}\n".format(env.hosts,
+                                env.user,
+                                env.key_filename)
+    Say.describe(msg)
 
 
 ### connect to ec2

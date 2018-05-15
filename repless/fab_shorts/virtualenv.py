@@ -3,8 +3,10 @@ import io
 import re
 import json
 from contextlib import contextmanager
-from ground.basic import Ask, Say, loadConfig, persistConfig
+from ground.basic import Ask, Say, loadConfig, persistConfig, setFabricEnv
 from fabric.api import run, local, env, task, put, prefix
+
+CONFIGFILE="./python-config.json"
 
 @contextmanager
 def loadEnv(envName):
@@ -15,19 +17,11 @@ def loadEnv(envName):
             yield
 
 @task
-def configs():
-    """
-    """
-    env.hosts=Ask.hosts()
-    envName=Ask.envName()
-    env.virtual_namis=envName
-    env.user="ec2-user"
-    env.key_filename=Ask.key_filename()
-
-@task
 def env2_python36_amix8664():
     """
     """
+    #load config
+    setFabricEnv(CONFIGFILE)
     #local env
     with loadEnv(env.virtual_namis):
         msg="[+] Env {} is on. Saving "\
