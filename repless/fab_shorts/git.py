@@ -9,7 +9,7 @@ import io
 import re
 import sys
 import json
-from ground.basic import persistConfig, loadConfig, Ask
+from ground.basic import persistConfig, loadConfig, Ask, setFabricEnv
 from fabric.api import run, local, env, task, prompt
 
 @task
@@ -52,7 +52,7 @@ def showConfiguraton():
     """
     ## open config file
     fd=open(env.rcfile, "r")
-    fileDict=dict([  [l.strip("\n").strip() 
+    fileDict=dict([  [l.strip("\n").strip()
                 for l in line.split("=")]
               for line in fd.readlines()])
     fd.close()
@@ -68,18 +68,11 @@ def showConfiguraton():
 
 
 @task
-def pushLocalAndPullRemote(configName):
+def pushLocalAndPullRemote(configFile):
     """
     """
     ## config settings
-    fileConfig=json.loads(env[configName])
-
-    ## set env variables
-    env.branch="master"
-    env.hosts=fileConfig["hosts"]
-    env.user=fileConfig["user"]
-    env.repo_path=fileConfig["repo_path"]
-    env.key_filename=fileConfig["key_filename"]
+    setFabricEnv(configFile)
 
     ## test  git
     status=local("git status", capture=True)
@@ -94,7 +87,7 @@ def pushLocalAndPullRemote(configName):
             files=prompt("List files to add or "\
                      "hit enter and add all", deafult="*")
             local("git add {}".format(files))
-    
+
     #last test
     status=local("git status", capture=True)
     print("\n################## Git Status")
@@ -105,7 +98,7 @@ def pushLocalAndPullRemote(configName):
                "Still want to pull on remote servers?"\
                "[y|n]", default="y")
         if doPush.lower() == "n":return
-    
+
     ## commit and push
     else:
         commitMessage=prompt("Please type your commit message:\n")
@@ -117,7 +110,5 @@ def pushLocalAndPullRemote(configName):
     if doPush.lower() == "n":return
 
     ## run server pull
-    run("cd %(repo_path)s; git checkout %(branch)s;"\
-        " git pull origin %(branch)s" % env)
-
-    
+    run("cd %(repo_path)s; git checkout %(repo_branch)s;"\
+        " git pull origin %(repo_branch)s" % env)

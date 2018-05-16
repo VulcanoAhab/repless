@@ -8,11 +8,10 @@ from contextlib import contextmanager
 from fabric.contrib.files import exists
 from fabric.api import run, local, env, task, prompt
 
-### lambda configs
+### config
 class Configuration:
     """
     """
-
     servers_ip=[]
     aws_key=""
     aws_secret=""
@@ -26,10 +25,9 @@ class Configuration:
     ssh_key_name=""
     user=""
     virtual_env=""
-    python_dependencies_file="requirements.txt"
-    lambda_ec2_file="/tmp/repless_lambda_ec2"
-    lambda_zip_local="/tmp/lambda_ground.zip"
-
+    python_requirements="requirements.txt"
+    # lambda_ec2_file="/tmp/repless_lambda_ec2"
+    # lambda_zip_local="/tmp/lambda_ground.zip"
     @classmethod
     def set_values(cls, **kwargs):
         """
@@ -120,6 +118,12 @@ class Say:
         """
         cls._yellow(msg)
 
+    @classmethod
+    def fail(cls, msg):
+        """
+        """
+        cls._red(msg)
+
 
 ## from rcfile to dict
 def loadConfig(configFile):
@@ -132,6 +136,41 @@ def loadConfig(configFile):
     configs=json.load(fd)
     fd.close()
     return configs
+
+# utils
+
+## zip Directory
+def zipDirectory(dirPath):
+    """
+    must run with active env
+    """
+    #vars
+    specials=[
+        "__pycache__",
+        ".Python",
+        ".DS_Store",
+    ]
+    #helper
+    def iter_toZip(zipFile, toAdd):
+        """
+        """
+        if toAdd in specials:return
+        if not os.path.isdir(toAdd):
+            zipFile.write(toAdd)
+            return
+        for element in os.listdir(toAdd):
+            full_name=os.path.join(toAdd,element)
+            iter_toZip(zipFile, full_name)
+    #cd directory
+    os.chdir(dirPath)
+    #directory
+    dirName=dirPath.split("/")[-1]
+    Ask.describe("[+] Packing directory: {}".format(dirName))
+    #zip
+    zipBaseList=os.listdir(".")
+    zipDir=ZipFile(dirName+".zip", "w")
+    for zipElement in zipBaseList:iter_toZip(zipDir, zipElement)
+    zipDir.close()
 
 ## persist rc file
 def persistConfig(configs, configFile):
