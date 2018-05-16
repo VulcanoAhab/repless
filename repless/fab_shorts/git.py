@@ -68,6 +68,24 @@ def showConfiguraton():
 
 
 @task
+def pull():
+    """
+    """
+    ## run servers pull
+    run("cd %(repo_path)s; "\
+        "git checkout %(repo_branch)s;"\
+        " git pull origin %(repo_branch)s" % env)
+
+@task
+def clone():
+    """
+    """
+    ## run servers clone
+    run("cd %(repo_path)s; "\
+        " git pull origin %(repo_url)s" % env)
+
+
+@task
 def pushLocalAndPullRemote(configFile):
     """
     """
@@ -108,7 +126,4 @@ def pushLocalAndPullRemote(configFile):
     doPush=prompt("All done. Pull on remote servers?"\
                   "[y|n]", default="y")
     if doPush.lower() == "n":return
-
-    ## run server pull
-    run("cd %(repo_path)s; git checkout %(repo_branch)s;"\
-        " git pull origin %(repo_branch)s" % env)
+    pull()

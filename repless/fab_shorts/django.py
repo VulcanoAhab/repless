@@ -1,7 +1,6 @@
 import os
-import string
-from zipfile import ZipFile
-from ground.basic import Ask, Say, loadConfig, persistConfig, setFabricEnv
+from git import *
+from ground.basic import Ask, Say, setFabricEnv
 from fabric.api import run, local, env, task, prompt
 
 
@@ -15,4 +14,4 @@ def deploy():
     """
     """
     setFabricEnv(CONFIGFILE)
-    run("git clone  {}".format(env.repository))
+    #clone_or_pull()
