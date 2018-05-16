@@ -2,7 +2,7 @@ import os
 import io
 import re
 import json
-from ground.basic import Ask, Say, loadConfig, persistConfig, setFabricEnv
+from ground.basic import Ask, Say, setFabricEnv
 from fabric.api import run, local, env, task, prompt
 
 CONFIGFILE="./python-config.json"
@@ -13,6 +13,8 @@ def install_36_amix8664():
     """
     """
     #test if configFile
+    setFabricEnv(CONFIGFILE)
+    #install
     msg="[+] Starting install..."
     Say.action(msg)
     msg="[+] Hosts: {}\n"\

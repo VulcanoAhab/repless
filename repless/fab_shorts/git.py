@@ -84,13 +84,21 @@ def clone():
     run("cd %(repo_path)s; "\
         " git pull origin %(repo_url)s" % env)
 
+@task
+def clone_or_pull(CONFIGFILE):
+    """
+    """
+    #test if repo exists
+    #if:pull
+    #not:clone
+    pass
 
 @task
-def pushLocalAndPullRemote(configFile):
+def pushLocalAndPullRemote(CONFIGFILE):
     """
     """
     ## config settings
-    setFabricEnv(configFile)
+    setFabricEnv(CONFIGFILE)
 
     ## test  git
     status=local("git status", capture=True)
