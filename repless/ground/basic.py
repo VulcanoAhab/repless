@@ -200,13 +200,10 @@ def setFabricEnv(CONFIGFILE):
     else:
         configs=preConfig
     for k,v in configs.items():
-        env[k]=v
-    msg="[+] Hosts: {}\n"\
-        "[+] User: {}\n"\
-        "[+] Key file: {}\n".format(env.hosts,
-                                env.user,
-                                env.key_filename)
-    Say.describe(msg)
+        setattr(env, k, v)
+        msg="\t[+] {}: {}".format(k,v)
+        Say.describe(msg)
+    return env
 
 
 ### connect to ec2
