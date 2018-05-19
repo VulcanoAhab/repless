@@ -6,16 +6,17 @@ import json
 import getpass
 from fabric.contrib import files
 from ground.basic import persistConfig, loadConfig, Ask, setFabricEnv
-from fabric.api import run, local, env, task, prompt
+from fabric.api import run, local, env, task, prompt, put
 
 CONFIGFILE="./postgresql-config.json"
 
 _HBA_DEFAULT="/var/lib/pgsql9/data/pg_hba.conf.default"
+            #"/var/lib/pgsql9/data/pg_hba.conf.default"
 _HBA_CONFIG="/var/lib/pgsql9/data/pg_hba.conf"
 _HBA_TEMPLATE="./fab_shorts/templates/postgresql_92_pg_hba.conf"
 
-_SERVER_DEFAULT="/var/lib/pgsql9/data/pg_server.conf.default"
-_SERVER_CONFIG="/var/lib/pgsql9/data/pg_server.conf"
+_SERVER_DEFAULT="/var/lib/pgsql9/data/postgresql.conf.default"
+_SERVER_CONFIG="/var/lib/pgsql9/data/postgresql.conf"
 _SERVER_TEMPLATE="./fab_shorts/templates/postgresql_92_pg_server.conf"
 
 # utils
@@ -42,20 +43,25 @@ def install_amix8664():
     #for testing
     #run("sudo service postgresql initdb")
     #update hba_file.conf
-    hba_file=open(_HBA_TEMPLATE).read()
-    hba_file=hba_file.format(database=env.db_name, user=env.db_user)
-    if not files.exists(_HBA_DEFAULT):
+    hba_content=open(_HBA_TEMPLATE).read()
+    hba_content=hba_content.format(database=env.db_name, user=env.db_user)
+    hba_file=io.StringIO()
+    hba_file.write(hba_content)
+    hba_file.seek(0)
+    if not files.exists(_HBA_DEFAULT,use_sudo=True):
         run("sudo cp {} {}".format(_HBA_CONFIG,_HBA_DEFAULT))
                                   #version-hardcoded::change
-    run("sudo touch {}".format(_HBA_CONFIG))
-    run("sudo echo \'{}\' > {}".format(hba_file,_HBA_CONFIG))
+    put(hba_file, _HBA_CONFIG, use_sudo=True)
     #update server_file.conf
-    severConfig_file=open(_SERVER_TEMPLATE).read() #listen to all::change
-    if not files.exists(_SERVER_DEFAULT):
+    severConfig_content=open(_SERVER_TEMPLATE).read() #listen to all::change
+    serverConfig_file=io.StringIO()
+    serverConfig_file.write(severConfig_content)
+    serverConfig_file.seek(0)
+    if not files.exists(_SERVER_DEFAULT, use_sudo=True):
         run("sudo cp {} {}".format(_SERVER_CONFIG,_SERVER_DEFAULT))
                                         #version-hardcoded::change
-    run("sudo touch {}".format(_SERVER_CONFIG))
-    run("sudo echo \'{}\' > {}".format(severConfig_file, _SERVER_CONFIG))
+
+    put(serverConfig_file, _SERVER_CONFIG,use_sudo=True)
     #start server
     run("sudo service postgresql start")
     #test if user exists
