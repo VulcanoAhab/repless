@@ -200,9 +200,9 @@ def setFabricEnv(CONFIGFILE):
     else:
         configs=preConfig
     for k,v in configs.items():
+        setattr(env, k, v)
         if "password"in k:
             v="".join(["*" for _ in v])
-        setattr(env, k, v)
         msg="\t[+] {}: {}".format(k,v)
         Say.describe(msg)
     return env

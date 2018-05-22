@@ -5,8 +5,8 @@ import sys
 import json
 import getpass
 from fabric.contrib import files
-from ground.basic import persistConfig, loadConfig, Ask, setFabricEnv
-from fabric.api import run, local, env, task, prompt, put
+from ground.basic import persistConfig, loadConfig, Ask, setFabricEnv, Say
+from fabric.api import run, local, env, task, prompt, put, prefix
 
 CONFIGFILE="./postgresql-config.json"
 
@@ -23,7 +23,7 @@ _SERVER_TEMPLATE="./fab_shorts/templates/postgresql_92_pg_server.conf"
 def _exec(toExec):
     """
     """
-    return sudo("sudo -u postgres {}".format(toExec))
+    return run("sudo -u postgres psql -t -A -c {}".format(toExec))
 
 
 # tasks
@@ -73,22 +73,33 @@ def install_amix8664():
             confirm_password=getpass.getpass("Please [re]type the passowrd: ")
             if password == confirm_password:break
             Say.warn("Passwords don\'t match. Let\'s try again.")
-        _exec("psql -t -A -c \"ALTER USER postgres WITH"\
+        _exec("\"ALTER USER postgres WITH"\
               " PASSWORD \'{}\';\"".format(password))
-    test_db=_exec("psql -t -A -c \"SELECT COUNT(*) FROM pg_database"\
-                  " WHERE datname = \'{}\';\"")
+    #checking database status
+    resp_db=_exec("\"SELECT COUNT(*) FROM pg_database"
+                  " WHERE datname = \'{}\';\"".format(env.db_name))
+    test_db=int(resp_db.split("\n")[-1])#could not change directory warning
     if test_db != 1:
         Say.action("[+] Creating database: {}".format(env.db_user))
-        _exec("createdb {} -O {}".format(env.db_user, env.db_password))
-    test_user=_exec("psql -t -A -c \"SELECT COUNT(*) FROM pg_user"\
+        run("sudo -u postgres createdb {} ".format(env.db_name))
+    #checking user
+    resp_user=_exec("\"SELECT COUNT(*) FROM pg_user"\
                     " WHERE usename = \'{}\';\"".format(env.db_user))
-    if test_user != "1":
+    test_user=int(resp_user.split("\n")[-1])#could not change directory warning
+    if test_user != 1:
         Say.action("[+] Creating user: {}".format(env.db_user))
-        _exec("psql -t -A -c"\
-              "\"CREATE USER {user} SUPERUSER;"\
+        _exec("\"CREATE USER {user} SUPERUSER;"\
               "ALTER USER {user} WITH PASSWORD \'{password}\';\"".format(
                                             user=env.db_user,
                                             password=env.db_password))
+    #setting priveleges
+    Say.action("[+] Grating user [{}] database [{}] privileges".format(
+                                               env.db_user, env.db_name))
+    _exec("\"GRANT ALL PRIVILEGES ON DATABASE {} TO {};\"".format(
+                                                        env.db_name,
+                                                        env.db_user))
+
+
 
 @task
 def backup():
