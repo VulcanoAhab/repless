@@ -21,7 +21,7 @@ def loadEnv(envName):
             yield
 
 @task
-def env2_python36_amix8664():
+def requirements_python36_linux():
     """
     """
     #load config
